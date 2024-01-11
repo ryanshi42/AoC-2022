@@ -92,7 +92,7 @@ fn part_1(input: &str) -> usize {
     ans + 1
 }
 
-fn part_2(input: &str) -> usize {
+fn part_2(_input: &str) -> usize {
     0
 }
 
