@@ -1,12 +1,6 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, cmp::Ordering};
 
 // https://github.com/LinAGKar/advent-of-code-2023-rust/blob/master/day22/src/main.rs
-
-impl Default for Tile {
-    fn default() -> Self {
-        Tile::Empty
-    }
-}
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 enum Element {
@@ -73,17 +67,17 @@ fn parse_str(input: &str) -> Element {
 
 }
 
-fn is_order(left: Element, right: Element) -> Order {
+fn is_order(left: Element, right: Element) -> Ordering {
     // println!("{:?}", left);
     // println!("{:?}", right);
     match (left, right) {
         (Element::Number(l), Element::Number(r)) => {
             if l < r {
-                return Order::IsOrder;
+                return Ordering::Greater;
             } else if l > r {
-                return Order::IsNotOrder;
+                return Ordering::Less;
             } else {
-                return Order::NoComment;
+                return Ordering::Equal;
             }
         }
         (Element::Vector(l), Element::Vector(r)) => {
@@ -91,17 +85,17 @@ fn is_order(left: Element, right: Element) -> Order {
             while tidx < l.len() && tidx < r.len() {
                 let (tl, tr) = (l[tidx].clone(), r[tidx].clone());
                 let res = is_order(tl, tr);
-                if res != Order::NoComment {
+                if res != Ordering::Equal {
                     return res;
                 }
                 tidx += 1;
             }
             if tidx == l.len() && tidx < r.len() {
-                return Order::IsOrder;
+                return Ordering::Greater;
             } else if tidx == r.len() && tidx < l.len() {
-                return Order::IsNotOrder;
+                return Ordering::Less;
             } else {
-                return Order::NoComment;
+                return Ordering::Equal;
             }
         }
         (x, Element::Vector(v)) => {
@@ -119,7 +113,7 @@ fn part_1(input: &str) -> usize {
 
     for (idx, (left, right)) in v.iter().enumerate() {
         let ordered = is_order(parse_str(left), parse_str(right));
-        if ordered == Order::IsOrder {
+        if ordered == Ordering::Greater {
             // println!("{}", idx + 1);
             ans += idx + 1;
         }
@@ -128,8 +122,24 @@ fn part_1(input: &str) -> usize {
     ans
 }
 
-fn part_2(_input: &str) -> usize {
-    0
+fn part_2(input: &str) -> usize {
+    let v = parse(input);
+    let mut nv = vec![];
+    v.iter().for_each(|(l, r)| {
+        nv.push(parse_str(l));
+        nv.push(parse_str(r));
+    });
+    let x = Element::Vector(vec![Element::Vector(vec![Element::Number(2)])]);
+    let y = Element::Vector(vec![Element::Vector(vec![Element::Number(6)])]);
+    nv.push(x.clone());
+    nv.push(y.clone());
+
+    nv.sort_by(|a, b| is_order(a.clone(), b.clone()));
+
+    // println!("{:?}", nv);
+    nv.reverse();
+
+    (nv.iter().position(|t| *t == x).unwrap() + 1) * (nv.iter().position(|t| *t == y).unwrap() + 1)
 }
 
 fn main() {
