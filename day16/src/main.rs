@@ -106,8 +106,9 @@ fn part_1(input: &str) -> usize {
                 deque.push_back((new_path, t + 1, ps + (M - t - 1) * last.fv));
             } else {
                 // Only opening valves saves a TRUCKLOAD lot of time! Exponential! Not -not opening- valves - since this is covered in our distance matrix anyways.
-                // To optimise, you could convert to a bit based approach.
-                // Could do Floyd-Warshall which is Vec<Vec<usize>>, dist[i][j]
+                // 1. To optimise, you could convert to a bitmap approach instead of path.
+                // 2. Could do Floyd-Warshall which is Vec<Vec<usize>>, dist[i][j], instead of always BFSing
+                // 3. Strip prefix is probably more efficient. BFS or DFS probs both work lol.
 
                 // strip_prefix
                 // or
