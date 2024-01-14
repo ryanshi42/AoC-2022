@@ -40,7 +40,7 @@ fn helper(hm: &HashSet<(i64, i64, i64)>, seen: &mut HashSet<(i64, i64, i64)>, x:
     if x < -1 || y < -1 || z < -1 {
         return 0;
     }
-    if x > 20 || y > 20 || z > 20 {
+    if x > 21 || y > 21 || z > 21 {
         return 0;
     }
     if seen.contains(&(x, y, z)) {
