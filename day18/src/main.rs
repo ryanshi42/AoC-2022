@@ -50,42 +50,15 @@ fn helper(hm: &HashSet<(i64, i64, i64)>, seen: &mut HashSet<(i64, i64, i64)>, x:
 
     let mut ans = 0;
 
-    if hm.get(&(x + 1, y, z)).is_none() {
-        ans += helper(hm, seen, x + 1, y, z);
+    for coord in [(x + 1, y, z), (x - 1, y, z), (x, y + 1, z), (x, y - 1, z), (x, y, z - 1), (x, y, z + 1)] {
+        if hm.get(&coord).is_none() {
+            ans += helper(hm, seen, coord.0, coord.1, coord.2);
+        }
+        else {
+            ans += 1;
+        } 
     }
-    else {
-        ans += 1;
-    }
-    if hm.get(&(x - 1, y, z)).is_none() {
-        ans += helper(hm, seen, x - 1, y, z);
-    } 
-    else {
-        ans += 1;
-    }
-    if hm.get(&(x, y + 1, z)).is_none() {
-        ans += helper(hm, seen, x, y + 1, z);
-    }
-    else {
-        ans += 1;
-    }
-    if hm.get(&(x, y - 1, z)).is_none() {
-        ans += helper(hm, seen, x, y - 1, z);
-    }
-    else {
-        ans += 1;
-    }
-    if hm.get(&(x, y, z - 1)).is_none() {
-        ans += helper(hm, seen, x, y, z - 1);
-    }
-    else {
-        ans += 1;
-    }
-    if hm.get(&(x, y, z + 1)).is_none() {
-        ans += helper(hm, seen, x, y, z + 1);
-    }
-    else {
-        ans += 1;
-    }
+
     ans
 
 
@@ -99,17 +72,13 @@ fn floodfill(hm: &mut HashSet<(i64, i64, i64)>) -> usize {
 
 fn part_2(input: &str) -> usize {
     let mut hm = HashSet::new();
-    let mut mx = 999999;
-    let mut my = 999999;
-    let mut mz = 999999;
+
     for line in input.lines() {
         let (a, x) = line.split_once(",").unwrap();
         let (b, c) = x.split_once(",").unwrap();
         let (x, y, z): (i64, i64, i64) = (a.parse().unwrap(), b.parse().unwrap(), c.parse().unwrap());
         hm.insert((x, y, z));
-        mx = mx.min(x);
-        my = my.min(y);
-        mz = mz.min(z); 
+
     }
     floodfill(&mut hm)
 }
