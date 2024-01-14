@@ -1,7 +1,7 @@
 
 // https://github.com/LinAGKar/advent-of-code-2023-rust/blob/master/day22/src/main.rs
 
-use std::fs;
+use std::{fs, collections::HashSet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum BlockType {
@@ -12,11 +12,10 @@ enum BlockType {
     Square
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Block {
     block_type: BlockType,
-    height: usize,
-    width: (usize, usize)
+    v: HashSet<(usize, usize)>,
 }
 
 impl BlockType {
@@ -30,104 +29,91 @@ impl BlockType {
         }
     }
 
-    fn default_width(&self) -> (usize, usize) {
+    fn get_set(&self, h: usize) -> HashSet<(usize, usize)> {
         match self {
-            BlockType::Minus => (2, 5),
-            BlockType::Plus => (2, 4),
-            BlockType::L => (2, 4),
-            BlockType::Eye => (3, 3),
-            BlockType::Square => (3, 4)
+            BlockType::Minus => HashSet::from([(2, h), (3, h), (4, h), (5, h)]),
+            BlockType::Plus => HashSet::from([(2, h + 1), (3, h), (3, h + 1), (3, h + 2), (4, h + 1)]),
+            BlockType::L => HashSet::from([(2, h), (3, h), (4, h), (4, h + 1), (4, h + 2)]),
+            BlockType::Eye => HashSet::from([(2, h), (2, h + 1), (2, h + 2), (2, h + 3)]),
+            BlockType::Square => HashSet::from([(2, h), (3, h), (2, h + 1), (3, h + 1)])
         }
     }
 }
 
 impl Block {
-    fn push_left(&mut self) {
-        if self.width.0 > 0 {
-            self.width.0 -= 1;
-            self.width.1 -= 1;
+    fn push_left(&mut self, heights: &HashSet<(usize, usize)>) {
+        if self.v.iter().any(|(x, _)| *x == 0) {
+            return;
+        }
+        self.v = self.v.iter().map(|(x, y)| (x - 1, *y)).collect();
+        if !heights.is_disjoint(&self.v) {
+            self.push_right(heights);
         }
     }
-    fn push_right(&mut self) {
-        if self.width.1 < 6 {
-            self.width.0 += 1;
-            self.width.1 += 1;
+    fn push_right(&mut self, heights: &HashSet<(usize, usize)>) {
+        if self.v.iter().any(|(x, _)| *x == 6) {
+            return;
+        }
+        self.v = self.v.iter().map(|(x, y)| (x + 1, *y)).collect();
+        if !heights.is_disjoint(&self.v) {
+            self.push_left(heights);
         }
     }
     fn push_down(&mut self) {
-        self.height -= 1;
+        self.v = self.v.iter().map(|(x, y)| (*x, y - 1)).collect();
     }
-    fn would_collide(&mut self, heights: &Vec<usize>) -> bool {
-        let (x, y) = self.width;
-        self.height += 1;
-        // println!("h = {:?}", self.height);
-        match self.block_type {
-            BlockType::Minus => heights[x] == self.height - 1 || heights[y] == self.height - 1 || heights[x + 1] == self.height - 1 || heights[x + 2] == self.height - 1,
-            BlockType::Plus => heights[x] == self.height || heights[y] == self.height || heights[x + 1] == self.height - 1,
-            BlockType::L => heights[x] == self.height - 1 || heights[y] == self.height - 1 || heights[x + 1] == self.height - 1,
-            BlockType::Eye => heights[x] == self.height - 1,
-            BlockType::Square => heights[x] == self.height - 1 || heights[y] == self.height - 1
-        }
+
+    fn push_up(&mut self) {
+        self.v = self.v.iter().map(|(x, y)| (*x, y + 1)).collect();
+    }
+
+    fn would_collide(&mut self, heights: &HashSet<(usize, usize)>) -> bool {
+        !heights.is_disjoint(&self.v)
     }
 }
 
 // Cbs, use SET to make sure that you don't move into another block.
 fn part_1(input: &str) -> usize {
-    let mut curr_block = Block { block_type: BlockType::Minus, height: 4, width: BlockType::Minus.default_width() };
-    let mut heights = vec![0; 7];
+    let mut curr_block = Block { block_type: BlockType::Minus, v: BlockType::Minus.get_set(4) };
+    let mut heights = HashSet::new();
+    heights.insert((0, 0));
+    heights.insert((1, 0));
+    heights.insert((2, 0));
+    heights.insert((3, 0));
+    heights.insert((4, 0));
+    heights.insert((5, 0));
+    heights.insert((6, 0));
+    heights.insert((7, 0));
     let mut i = 1;
     let mut su = 1;
     loop {
         let jet = input.chars().nth((i - 1) % input.len()).unwrap();
         match jet {
-            '<' => curr_block.push_left(),
-            '>' => curr_block.push_right(),
+            '<' => curr_block.push_left(&heights),
+            '>' => curr_block.push_right(&heights),
             _ => (),
         }
-        println!("{i} {:?} {}", heights, jet);
+        println!("{i} {:?} {}", curr_block.v, jet);
+
+        // println!("v: {:?}", self.v);
         curr_block.push_down();
         if curr_block.would_collide(&heights) {
+            curr_block.push_up();
             println!("colliding");
-            let (x, _) = curr_block.width;
-            match curr_block.block_type {
-                BlockType::Minus => {
-                    heights[x] = curr_block.height;
-                    heights[x + 1] = curr_block.height;
-                    heights[x + 2] = curr_block.height;
-                    heights[x + 3] = curr_block.height;
-                },
-                BlockType::Plus => {
-                    heights[x] = curr_block.height + 1;
-                    heights[x + 1] = curr_block.height + 2;
-                    heights[x + 2] = curr_block.height + 1;
-                },
-                BlockType::L => {
-                    heights[x] = curr_block.height;
-                    heights[x + 1] = curr_block.height;
-                    heights[x + 2] = curr_block.height + 2;
-                }, 
-                BlockType::Eye => heights[x] = curr_block.height + 3,
-                BlockType::Square => {
-                    heights[x] = curr_block.height + 1;
-                    heights[x + 1] = curr_block.height + 1;
-                }
-            }
+            heights.extend(curr_block.v);
 
             let next_block_type = curr_block.block_type.next_block();
             su += 1;
             if su == 2023 {
-                return *heights.iter().max().unwrap();
+                return *heights.iter().map(|(_, y)| y).max().unwrap();
             }
-            curr_block = Block { block_type: next_block_type.clone(), height: *heights.iter().max().unwrap() + 4, width: next_block_type.default_width() };
-        } else {
-            curr_block.height -= 1;
+            curr_block = Block { block_type: next_block_type.clone(), v: next_block_type.get_set(*heights.iter().map(|(_, y)| y).max().unwrap() + 4) };
         }
         i += 1;
     }
-    *heights.iter().max().unwrap()
 }
 
-fn part_2(input: &str) -> usize {
+fn part_2(_input: &str) -> usize {
     0
 }
 
