@@ -200,3 +200,13 @@ fn main() {
     println!("Part 2 time: {:?}", std::time::Instant::now() - start_time);
     println!("Part 2 result: {}", result);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*; 
+
+    #[test]
+    fn test_part_1() {
+        assert_eq!(1, 1);
+    }
+}
