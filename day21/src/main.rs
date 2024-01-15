@@ -16,6 +16,7 @@ struct Monkey<'a> {
 }
 
 // PART 1: JUST USE RECURSION....
+// Each monkey depends on two other monkeys directly. It is not the same as looping and then seeing some unfinished conditions...
 fn part_1(input: &str) -> i64 {
     let mut monkeys: HashMap<&str, Monkey> = HashMap::new();
     let mut um = vec![];
